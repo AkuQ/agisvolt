@@ -15,10 +15,10 @@ class Device(Model):
 class Measurement(Model):
     class Meta:
         unique_together = (('device_id', 'timestamp'),)
+        ordering = ['timestamp']
 
     device_id = Foreign(Device, on_delete=models.CASCADE, primary_key=True, db_column='device_id')
     timestamp = BigInteger()
     mean = Float()
     max = Float()
     min = Float()
-
