@@ -1,21 +1,19 @@
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseNotFound, HttpRequest
 from django.shortcuts import render
 
 
 class Views:
     @staticmethod
-    def test():
-        return HttpResponse('Hello!')
-        # return HttpResponse("You're looking at question %s." % question_id)
+    def test(request: HttpRequest):
+        return HttpResponse(str(request.get_host()))
 
     @staticmethod
-    def testReact(request):
-        return render(request, 'react.html')
+    def testReact(request: HttpRequest):
+        return render(request, 'react.html', {'api': request.get_host() + '/api/'})
 
 
 def get(*args, view: str, **kwargs):
-    if not hasattr(Views, view):
-        return HttpResponseNotFound("Oops!")
-    return getattr(Views, view)(*args, **kwargs)
-
-
+    if hasattr(Views, view):
+        return getattr(Views, view)(*args, **kwargs)
+    else:
+        return HttpResponseNotFound("Page does not exist.")
