@@ -183,3 +183,4 @@ venv.bak/
 node_modules
 agisvolt/env.py
 Volt/static/bundles
+webpack-stats.json
