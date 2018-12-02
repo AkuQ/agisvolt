@@ -17,7 +17,8 @@ class Measurement(Model):
         unique_together = (('device_id', 'timestamp'),)
         ordering = ['timestamp']
 
-    device_id = Foreign(Device, on_delete=models.CASCADE, primary_key=True, db_column='device_id')
+    measurement_id = BigAuto(primary_key=True)
+    device_id = Foreign(Device, on_delete=models.CASCADE, db_column='device_id')
     timestamp = BigInteger()
     mean = Float()
     max = Float()

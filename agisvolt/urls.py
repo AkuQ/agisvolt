@@ -16,11 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from Volt import views
+from Volt import views, api
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # Views:
-    path('<str:view>/', views.get)
     # API:
+    path('api/measurements/', api.measurements.as_view()),
+    # Views:
+    path('<str:view>/', views.get),
 ]
