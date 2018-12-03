@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'Volt.apps.VoltConfig',
-    'webpack_loader'
+    'webpack_loader',
+    'django_crontab',
 ]
 
 WEBPACK_LOADER = {
@@ -50,6 +51,14 @@ WEBPACK_LOADER = {
         'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
     }
 }
+
+CRONJOBS = [
+    (
+        # '* * * * *', 'Volt.cron.job_foo', [1], {}, '>> ' + os.path.join(BASE_DIR, 'cron.log')
+    ),
+]
+CRONTAB_LOCK_JOBS = True
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
