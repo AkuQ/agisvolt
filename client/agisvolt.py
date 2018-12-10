@@ -9,22 +9,22 @@ class APIHandler:
         self._host = host
         self._measurements = {}
 
-    def append_measurement(self, timestamp: int, mean_val: float, max_val: float, min_val: float):
+    def append_measurement(self, timestamp: int, value: float, label=''):
         """
         Add 1-second resolution measurement sample.
 
         :param timestamp: Current time in epoch-seconds.
-        :param mean_val: Aggregate value.
-        :param max_val: Max. spike during the 1-second measurement.
-        :param min_val: Min. spike during the 1-second measurement.
+        :param value: Max. spike during the 1-second measurement.
+        :param label: Adding a label that's unique with timestamps allows for multiple data points per timestamp.
         :return:
         """
-        self._measurements[timestamp] = {'timestamp': timestamp, 'mean': mean_val, 'max': max_val, 'min': min_val}
+        key = "%d|%s" % (timestamp, label)
+        self._measurements[key] = {'timestamp': timestamp, 'label': label, 'value': value}
 
     def send_measurements(self) -> bool:
         """
         Send measurement samples to server.
-        :return:
+        :return: True if server successfully received data. If False measurements remain in local buffer.
         """
         # Todo: make asynchronous
         try:
@@ -63,7 +63,9 @@ class APIHandler:
 #     now = int(time())
 #     if now > last_timestamp:
 #         value = random() * 12.0
-#         api.append_measurement(now, value, value+random(), value-random())
+#         api.append_measurement(now, value, 'mean')
+#         api.append_measurement(now, value+random(), 'max_error')
+#         api.append_measurement(now, value-random(), 'min_error')
 #         success = api.send_measurements()
 #         not success and print("Warning: API call failed.")
 #         last_timestamp = now

@@ -14,12 +14,11 @@ class Device(Model):
 
 class Measurement(Model):
     class Meta:
-        unique_together = (('device_id', 'timestamp'),)
+        unique_together = (('device_id', 'timestamp', 'label'),)
         ordering = ['timestamp']
 
     measurement_id = BigAuto(primary_key=True)
     device_id = Foreign(Device, on_delete=models.CASCADE, db_column='device_id')
     timestamp = BigInteger()
-    mean = Float()
-    max = Float()
-    min = Float()
+    value = Float()
+    label = Char(max_length=128, default='')
