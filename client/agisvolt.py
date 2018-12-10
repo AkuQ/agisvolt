@@ -19,7 +19,7 @@ class APIHandler:
         :return:
         """
         key = "%d|%s" % (timestamp, label)
-        self._measurements[key] = {'timestamp': timestamp, 'label': label, 'value': value}
+        self._measurements[key] = {'timestamp': timestamp, 'value': value, 'label': label}
 
     def send_measurements(self) -> bool:
         """
@@ -37,10 +37,6 @@ class APIHandler:
                     'measurements': list(self._measurements.values())
                 }).encode()
             )
-            print(json.dumps({
-                    'device_id': self._device_id,
-                    'measurements': list(self._measurements.values())
-                }).encode())
             response = build_opener(HTTPHandler).open(request)  # type: HTTPResponse
             if response.code in range(200, 300):
                 self._measurements.clear()
