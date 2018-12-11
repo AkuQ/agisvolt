@@ -21,6 +21,7 @@ from Volt import views, api
 urlpatterns = [
     path('admin/', admin.site.urls),
     # API:
+    path('api/devices/', api.devices.as_view()),
     path('api/measurements/', api.measurements.as_view()),
     # Views:
     path('<str:view>/', views.get),

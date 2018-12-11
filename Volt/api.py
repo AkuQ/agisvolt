@@ -2,12 +2,20 @@ import json
 
 from django.db import transaction, IntegrityError
 from django.db.models import Q
-from django.http import HttpRequest as Request, HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.http import HttpRequest as Request, JsonResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 
 from .models import Measurement, Device
+
+
+# noinspection PyMethodMayBeStatic
+@method_decorator(csrf_exempt, name='dispatch')
+class devices(View):
+    def get(self, request: Request):
+        devices = Device.objects.all().values()
+        return JsonResponse({'devices': list(devices)})
 
 
 # noinspection PyMethodMayBeStatic
@@ -40,4 +48,3 @@ class measurements(View):
 
         measurements = Measurement.objects.filter(*filters).values('timestamp', 'value', 'label')
         return JsonResponse({'measurements': list(measurements)})
-
