@@ -1,5 +1,6 @@
 import json
 from http.client import HTTPResponse
+from urllib.error import HTTPError
 from urllib.request import Request, build_opener, HTTPHandler
 
 
@@ -29,21 +30,26 @@ class APIHandler:
         # Todo: make asynchronous
         try:
             request = Request(
-                self._host + 'measurements/',
+                self._host + '/api/measurements/',
                 method='PUT',
-                headers={'Content-Type': 'application/json'},
+                headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'},
                 data=json.dumps({
                     'device_id': self._device_id,
                     'measurements': list(self._measurements.values())
-                }).encode()
+                }).encode(),
             )
+
             response = build_opener(HTTPHandler).open(request)  # type: HTTPResponse
             if response.code in range(200, 300):
                 self._measurements.clear()
                 return True
             else:
                 return False
-        except Exception:
+        except HTTPError as e:
+            print(e)
+            return False
+        except Exception as e:
+            print(e)
             return False
 
 
@@ -53,7 +59,7 @@ class APIHandler:
 # from time import sleep, time
 #
 #
-# api = APIHandler('http://localhost:8000/api/', 100)
+# api = APIHandler('http://agis.innocode.fi', 100)
 # last_timestamp = 0
 # while 1:
 #     now = int(time())
