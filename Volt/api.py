@@ -1,4 +1,6 @@
 import json
+from random import random
+from time import time
 
 from django.db import transaction, IntegrityError
 from django.db.models import Q
@@ -10,12 +12,28 @@ from django.views.generic import View
 from .models import Measurement, Device
 
 
+def test_randoms(start=0, end=None):
+    now = int(time())
+    if end is None: end = now
+    end = min(now, int(end))
+    start = max(now - 60, int(start))
+
+    ret = []
+    for t in range(start, end + 1):
+        for k, v in {'t1': random()*10, 't2': random()*10,  't3': random()*10}.items():
+            ret.append({'timestamp': t, 'value': v, 'label': k})
+        if random() > .5:
+            ret.append({'timestamp': t, 'value': 2, 'label': 't4'})
+    return ret
+
+
 # noinspection PyMethodMayBeStatic
 @method_decorator(csrf_exempt, name='dispatch')
 class devices(View):
     def get(self, request: Request):
-        devices = Device.objects.all().values()
-        return JsonResponse({'devices': list(devices)})
+        devices = list(Device.objects.all().values())
+        devices.append({'device_id': 'TEST'})
+        return JsonResponse({'devices': devices})
 
 
 # noinspection PyMethodMayBeStatic
@@ -39,6 +57,9 @@ class measurements(View):
         params = request.GET.dict()  # type: dict
         device_id = params.get('device_id', 0)
         _from, _to = params.get('from', 0), params.get('to', None)
+
+        if device_id == 'TEST':
+            return JsonResponse({'measurements': test_randoms(_from, _to)})
 
         filters = [
             Q(device_id=device_id),
