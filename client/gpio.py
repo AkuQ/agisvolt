@@ -1,6 +1,8 @@
 from time import sleep
 import RPi.GPIO as GPIO
 
+# 3.3V physical: 1, 17
+#
 
 # noinspection PyAttributeOutsideInit,PyPep8Naming
 class Voltmeter:
@@ -105,7 +107,7 @@ class Voltmeter:
         :param channel: The positive channel to use (0-15)
         :param compare_to_adjacent: Whether to use the adjacent channel or the general COM line as negative channel.
         Channel 0 is adjacent to 1 and vice versa (and 2 to 3, and 4 to 5, etc.).
-        :return:
+        :return: value, overflow status, raw bits
         """
         control = 0b101
         single_ch = 0 if compare_to_adjacent else 1
@@ -119,12 +121,19 @@ class Voltmeter:
         if self.EOC == 0:
             data = self.MISO
             value = data & (2**16 - 1)
-            value = value if data & 2**16 else -value
+            value = value if (data >> 15) & 0b1 else -value
+            overflow = ((data >> 15) ^ (data >> 16)) & 0b1
+
+            if (data >> 17) & 0b1:
+                raise IOError()
+
             print(bin(data)[2:].rjust(19, '0'))
         else:
+            data = None
+            overflow = None
             value = None
         self.CS = 1
-        return value
+        return value, overflow, data
 
 
 def raises(e: Exception): raise e
@@ -165,3 +174,4 @@ def raises(e: Exception): raise e
 #     pass
 #
 # voltmeter.close()
+
