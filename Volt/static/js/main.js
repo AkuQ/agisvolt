@@ -35,19 +35,34 @@ class VoltChart extends React.Component {
     constructor(props){
         super(props);
         this.state = {
-            device_id: 100,
-            data: []
+            device_id: 'TEST',
+            devices: [],
+            data: [],
         };
         this.last_timestamp = 0;
         this.last_poll = 0;
         this.is_polling = false;
         this.buffer = [];
+        this.data_keys= {};
+    }
+
+    fetchDevices() {
+          let conf = {
+                method: 'GET',
+                headers: {'Content-Type': 'application/json'},
+                // body: {},
+                credentials: 'same-origin',
+            };
+            let url = '/api/devices';
+            fetch(url, conf)
+                .then(response => response.json())
+                .then(json => this.setState({devices: json.devices}));
     }
 
     pollData(max_lookback){
         if(!this.is_polling && this.last_poll + POLL_DELAY <= PyTime()) {
-            this.last_poll = PyTime();
             this.is_polling = true;
+            this.last_poll = PyTime();
 
             let conf = {
                 method: 'GET',
@@ -56,6 +71,7 @@ class VoltChart extends React.Component {
                 credentials: 'same-origin',
             };
 
+            // console.log(this.state.device_id);
             let url = ParametrizeURL('/api/measurements', {
                 device_id: this.state.device_id, from: Math.max(this.last_timestamp + 1, max_lookback)
             });
@@ -65,9 +81,11 @@ class VoltChart extends React.Component {
                 .then(json => {
                     if (Array.isArray(json.measurements)) {
                         let measurements = {};
+
                         json.measurements.forEach(row => {
                             measurements[row.timestamp] = measurements[row.timestamp] || {timestamp: row.timestamp};
                             measurements[row.timestamp][row.label || ''] = row.value;
+                            this.data_keys[row.label] = row.timestamp;
                         });
 
                         measurements = Object.values(measurements).sort((a, b) => a.timestamp - b.timestamp);
@@ -101,21 +119,27 @@ class VoltChart extends React.Component {
 
     componentDidMount() {
         let intervalID = setInterval(this.tick.bind(this), 1000);
+        this.fetchDevices();
+    }
+
+    renderLine(dataKey){
+        return (
+            <Line
+                key={dataKey + "_line"}
+                type='monotone' dataKey={dataKey} stroke='#0892d0' dot={true}
+                yAxisId='Y' xAxisId='x' animationDuration={500} isAnimationActive={false}
+            />
+        );
     }
 
     render() {
         let now = PyTime();
+
         return <div>
             <LineChart width={750} height={250} data={[...this.state.data]}>
-                <Line
-                    type='monotone' dataKey='mean' stroke='#0892d0' dot={false}
-                    yAxisId='y' xAxisId='x' animationDuration={500} isAnimationActive={false}  />
-                <Line
-                    type='monotone' dataKey='max_error' stroke='#0892d0' dot={false}
-                    yAxisId='y' xAxisId='x' animationDuration={500} isAnimationActive={false} />
-
+                 {Object.keys(this.data_keys).map(k => this.renderLine(k))}
                 <XAxis xAxisId='x' dataKey='timestamp' type='number' domain={[now - PREBUFFER * 2, now - PREBUFFER]} allowDataOverflow={true}/>
-                <YAxis yAxisId='y' dataKey='mean' type='number' domain={[0.0, 12.0]}/>
+                <YAxis yAxisId='Y' dataKey={'t1'} type='number' domain={[0.0, 12.0]}/>
                 <Legend />
                 <Tooltip />
             </LineChart>
@@ -123,21 +147,14 @@ class VoltChart extends React.Component {
                 ev.target.value = 'Play';
                 this.setState({paused: !this.state.paused});
             }}/>
+            <select onChange={ev => this.setState({device_id: ev.target.value})} defaultValue={this.state.device_id}>
+                {this.state.devices.map(d =>
+                    <option key={d.device_id} value={d.device_id}>{d.device_id}</option>)}
+            </select>
         </div>;
-
-        // return <AnyChart title="test" type="line" data={this.state.data}/>;
-        // let series = new TimeSeries({events: this.state.events});
-        // return <ChartContainer width={800} timeRange={series.timerange()}>
-        //     <ChartRow height="200">
-        //         <YAxis id="axis1" label="Voltage" min={0.0} max={1.0} width="60" type="linear" format=".2f"/>
-        //         <Charts>
-        //             <LineChart axis="axis1" series={series} column={["value"]}/>
-        //             <LineChart axis="axis2" series={series} column={["value2"]}/>
-        //         </Charts>
-        //         <YAxis id="axis2" label="Value * 10" min={0.0} max={10.0} width="80" type="linear" format=".2f"/>
-        //     </ChartRow>
-        // </ChartContainer>
     }
+
+
 }
 
 const element = <VoltChart name="world" />;
