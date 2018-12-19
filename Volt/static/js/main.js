@@ -24,12 +24,32 @@ Array.prototype.first = function (field) {
 };
 
 
+
+
 /**
  * @return {string}
  */
 function ParametrizeURL(url, params) {
     return url + '?' +  new URLSearchParams(params).toString();
 }
+
+
+const colors = [
+    "#0e0e0e",
+    "#e6194B",
+    "#3cb44b",
+    "#ffe119",
+    "#4363d8",
+    "#f58231",
+    "#22b4c4",
+    "#f032e6",
+    "#266960",
+    "#706565",
+    "#7A5324",
+    "#800000",
+    "#000075",
+    "#004919",
+];
 
 class VoltChart extends React.Component {
     constructor(props){
@@ -38,12 +58,15 @@ class VoltChart extends React.Component {
             device_id: 'TEST',
             devices: [],
             data: [],
+            dataKeys: {},
+            colorStack: [...Array(colors.length).keys()],
         };
         this.last_timestamp = 0;
         this.last_poll = 0;
         this.is_polling = false;
         this.buffer = [];
-        this.data_keys= {};
+        // this.state.
+
     }
 
     fetchDevices() {
@@ -85,7 +108,12 @@ class VoltChart extends React.Component {
                         json.measurements.forEach(row => {
                             measurements[row.timestamp] = measurements[row.timestamp] || {timestamp: row.timestamp};
                             measurements[row.timestamp][row.label || ''] = row.value;
-                            this.data_keys[row.label] = row.timestamp;
+
+                            this.state.dataKeys[row.label] = this.state.dataKeys[row.label] || {
+                                timestamp: undefined,
+                                color: this.state.colorStack.pop(),  // todo: index error if out of colors
+                            };
+                            this.state.dataKeys[row.label].timestamp = row.timestamp;
                         });
 
                         measurements = Object.values(measurements).sort((a, b) => a.timestamp - b.timestamp);
@@ -122,32 +150,65 @@ class VoltChart extends React.Component {
         this.fetchDevices();
     }
 
-    renderLine(dataKey){
-        return (
+    renderLine(dataKey, i){
+        let keyStyles = this.state.dataKeys[dataKey];
+        let color = colors[keyStyles.color];
+        let orientation = i % 2 == 1;
+        return [
+            <YAxis yAxisId={dataKey+"_y"} type='number' dataKey={dataKey} domain={[0.0, 12.0]}
+                   tick={{fill: "black"}} stroke={color}  orientation={orientation ?  'right' : 'left'}
+                   label={{value: dataKey, position: 'top', fill: color, dx: orientation ? -25: 25, dy: -1}}
+            />,
             <Line
                 key={dataKey + "_line"}
-                type='monotone' dataKey={dataKey} stroke='#0892d0' dot={true}
-                yAxisId='Y' xAxisId='x' animationDuration={500} isAnimationActive={false}
+                type='monotone' dataKey={dataKey} stroke={color} dot={true}
+                yAxisId={dataKey+"_y"} xAxisId='x' animationDuration={500} isAnimationActive={false}
             />
-        );
+        ];
     }
 
     render() {
         let now = PyTime();
 
+        const timeTickFormat = t => {
+            t = new Date(t*1000);
+            let min = ("" + t.getMinutes()).padStart(2, "0");
+            let sec = ("" + t.getSeconds()).padStart(2, "0");
+            return ":" + min + ":" + sec;
+        };
+
+        const tooltipFormatter = (value, name, props) => {
+            return value.toFixed(4);
+        };
+
+        const tooltipLabelFormatter = (t) => {
+            return new Date(t*1000).toLocaleString();
+        };
+
         return <div>
-            <LineChart width={750} height={250} data={[...this.state.data]}>
-                 {Object.keys(this.data_keys).map(k => this.renderLine(k))}
-                <XAxis xAxisId='x' dataKey='timestamp' type='number' domain={[now - PREBUFFER * 2, now - PREBUFFER]} allowDataOverflow={true}/>
-                <YAxis yAxisId='Y' dataKey={'t1'} type='number' domain={[0.0, 12.0]}/>
-                <Legend />
-                <Tooltip />
+            <LineChart width={750} height={250} data={[...this.state.data]} margin={{top:20}}>
+
+                 {Object.keys(this.state.dataKeys).map((k, i) => this.renderLine(k, i))}
+
+                <XAxis xAxisId='x' dataKey='timestamp' type='number' tickFormatter={timeTickFormat}
+                       domain={[now - PREBUFFER * 2, now - PREBUFFER]} allowDataOverflow={true}/>
+                <Legend onClick={(...a) => console.log(a) } />
+                <Tooltip formatter={tooltipFormatter} labelFormatter={tooltipLabelFormatter}/>
             </LineChart>
+
             <input type='button' value={this.state.paused && 'Play' || 'Pause'} onClick={(ev) => {
                 ev.target.value = 'Play';
                 this.setState({paused: !this.state.paused});
             }}/>
-            <select onChange={ev => this.setState({device_id: ev.target.value})} defaultValue={this.state.device_id}>
+            <select value={this.state.device_id} 
+                onChange={ev =>
+                    this.setState({
+                        device_id: ev.target.value,
+                        data: [],
+                        dataKeys: {},
+                        colorStack: [...Array(colors.length).keys()],})
+                }>
+
                 {this.state.devices.map(d =>
                     <option key={d.device_id} value={d.device_id}>{d.device_id}</option>)}
             </select>
