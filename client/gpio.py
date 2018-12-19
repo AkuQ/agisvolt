@@ -107,7 +107,7 @@ class Voltmeter:
         :param channel: The positive channel to use (0-15)
         :param compare_to_adjacent: Whether to use the adjacent channel or the general COM line as negative channel.
         Channel 0 is adjacent to 1 and vice versa (and 2 to 3, and 4 to 5, etc.).
-        :return: value, overflow status, raw bits
+        :return:
         """
         control = 0b101
         single_ch = 0 if compare_to_adjacent else 1
@@ -116,13 +116,16 @@ class Voltmeter:
         bits = control << 5 | single_ch << 4 | odd_ch << 3 | ch << 0
         self.MOSI = bits
 
-    def get_conversion(self):
+    def get_conversion(self) -> tuple:
+        """
+        :return: value, overflow status, raw bits
+        """
         self.CS = 0
         if self.EOC == 0:
             data = self.MISO
             value = data & (2**16 - 1)
             value = value if (data >> 15) & 0b1 else -value
-            overflow = ((data >> 15) ^ (data >> 16)) & 0b1
+            overflow = ((data >> 16) ^ (data >> 15)) & 0b1 == 1
 
             if (data >> 17) & 0b1:
                 raise IOError()
