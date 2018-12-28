@@ -9,7 +9,7 @@ const POLL_DELAY = 5;
 /**
  * @return {number}
  */
-function PyTime() {
+function pyTime() {
     return Math.floor(Date.now() / 1000);
 }
 
@@ -29,7 +29,7 @@ Array.prototype.first = function (field) {
 /**
  * @return {string}
  */
-function ParametrizeURL(url, params) {
+function parametrizeURL(url, params) {
     return url + '?' +  new URLSearchParams(params).toString();
 }
 
@@ -65,8 +65,8 @@ class VoltChart extends React.Component {
         this.last_poll = 0;
         this.is_polling = false;
         this.buffer = [];
-        // this.state.
-
+        this.now = pyTime();
+        this.timeDomain = () => [this.now - PREBUFFER * 2, this.now - PREBUFFER]
     }
 
     fetchDevices() {
@@ -83,19 +83,18 @@ class VoltChart extends React.Component {
     }
 
     pollData(max_lookback){
-        if(!this.is_polling && this.last_poll + POLL_DELAY <= PyTime()) {
+        if(!this.is_polling && this.last_poll + POLL_DELAY <= this.now) {
             this.is_polling = true;
-            this.last_poll = PyTime();
+            this.last_poll = this.now;
 
             let conf = {
                 method: 'GET',
                 headers: {'Content-Type': 'application/json'},
-                // body: {},
                 credentials: 'same-origin',
             };
 
             // console.log(this.state.device_id);
-            let url = ParametrizeURL('/api/measurements', {
+            let url = parametrizeURL('/api/measurements', {
                 device_id: this.state.device_id, from: Math.max(this.last_timestamp + 1, max_lookback)
             });
 
@@ -110,10 +109,11 @@ class VoltChart extends React.Component {
                             measurements[row.timestamp][row.label || ''] = row.value;
 
                             this.state.dataKeys[row.label] = this.state.dataKeys[row.label] || {
-                                timestamp: undefined,
                                 color: this.state.colorStack.pop(),  // todo: index error if out of colors
                             };
                             this.state.dataKeys[row.label].timestamp = row.timestamp;
+
+                            row.value < 0 && (this.state.dataKeys[row.label].neg = true);
                         });
 
                         measurements = Object.values(measurements).sort((a, b) => a.timestamp - b.timestamp);
@@ -126,9 +126,16 @@ class VoltChart extends React.Component {
         }
     }
 
+    componentDidMount() {
+        setInterval(this.tick.bind(this), 1000);
+        this.fetchDevices();
+    }
+
     tick() {
+        this.now = pyTime();
+
         let data = this.state.data;
-        let cursor = PyTime() - PREBUFFER;
+        let cursor = this.now - PREBUFFER;
         let max_lookback = cursor - POSTBUFFER;
         this.pollData(max_lookback);
 
@@ -144,20 +151,21 @@ class VoltChart extends React.Component {
         refresh && !this.state.paused && this.forceUpdate();
     }
 
-
-    componentDidMount() {
-        let intervalID = setInterval(this.tick.bind(this), 1000);
-        this.fetchDevices();
-    }
-
     renderLine(dataKey, i){
         let keyStyles = this.state.dataKeys[dataKey];
         let color = colors[keyStyles.color];
         let orientation = i % 2 == 1;
+
+        let max = 0.0;
+        this.state.data.forEach(row => row[dataKey] && row[dataKey] > max && (max = row[dataKey]));
+        max = Math.ceil(max) + Math.ceil(max / 10);
+        let min = this.state.dataKeys[dataKey].neg && -max || 0.0;
+
         return [
-            <YAxis yAxisId={dataKey+"_y"} type='number' dataKey={dataKey} domain={[0.0, 12.0]}
+            <YAxis yAxisId={dataKey+"_y"} type='number' dataKey={dataKey} domain={[min, max]}
                    tick={{fill: "black"}} stroke={color}  orientation={orientation ?  'right' : 'left'}
                    label={{value: dataKey, position: 'top', fill: color, dx: orientation ? -25: 25, dy: -1}}
+                   allowDataOverflow={true}
             />,
             <Line
                 key={dataKey + "_line"}
@@ -168,8 +176,6 @@ class VoltChart extends React.Component {
     }
 
     render() {
-        let now = PyTime();
-
         const timeTickFormat = t => {
             t = new Date(t*1000);
             let min = ("" + t.getMinutes()).padStart(2, "0");
@@ -191,7 +197,7 @@ class VoltChart extends React.Component {
                  {Object.keys(this.state.dataKeys).map((k, i) => this.renderLine(k, i))}
 
                 <XAxis xAxisId='x' dataKey='timestamp' type='number' tickFormatter={timeTickFormat}
-                       domain={[now - PREBUFFER * 2, now - PREBUFFER]} allowDataOverflow={true}/>
+                       domain={this.timeDomain()} allowDataOverflow={true}/>
                 <Legend onClick={(...a) => console.log(a) } />
                 <Tooltip formatter={tooltipFormatter} labelFormatter={tooltipLabelFormatter}/>
             </LineChart>
