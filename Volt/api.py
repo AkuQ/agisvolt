@@ -20,7 +20,7 @@ def test_randoms(start=0, end=None):
 
     ret = []
     for t in range(start, end + 1):
-        for k, v in {'t1': random()*10, 't2': random()*10,  't3': random()*10}.items():
+        for k, v in {'t1': random()*10, 't2': random()*10,  't3': random()*10 - 5}.items():
             ret.append({'timestamp': t, 'value': v, 'label': k})
         if random() > .5:
             ret.append({'timestamp': t, 'value': 2, 'label': 't4'})
