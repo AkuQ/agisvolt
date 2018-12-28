@@ -44,7 +44,7 @@ const colors = [
     "#22b4c4",
     "#f032e6",
     "#266960",
-    "#706565",
+    // "#706565",
     "#7A5324",
     "#800000",
     "#000075",
@@ -110,6 +110,7 @@ class VoltChart extends React.Component {
 
                             this.state.dataKeys[row.label] = this.state.dataKeys[row.label] || {
                                 color: this.state.colorStack.pop(),  // todo: index error if out of colors
+                                hidden: false,
                             };
                             this.state.dataKeys[row.label].timestamp = row.timestamp;
 
@@ -153,24 +154,26 @@ class VoltChart extends React.Component {
 
     renderLine(dataKey, i){
         let keyStyles = this.state.dataKeys[dataKey];
-        let color = colors[keyStyles.color];
+        let color = keyStyles.hidden ? "#a09292" : colors[keyStyles.color];
         let orientation = i % 2 == 1;
 
         let max = 0.0;
         this.state.data.forEach(row => row[dataKey] && row[dataKey] > max && (max = row[dataKey]));
         max = Math.ceil(max) + Math.ceil(max / 10);
-        let min = this.state.dataKeys[dataKey].neg && -max || 0.0;
+        let min = keyStyles.neg && -max || 0.0;
 
         return [
             <YAxis yAxisId={dataKey+"_y"} type='number' dataKey={dataKey} domain={[min, max]}
                    tick={{fill: "black"}} stroke={color}  orientation={orientation ?  'right' : 'left'}
                    label={{value: dataKey, position: 'top', fill: color, dx: orientation ? -25: 25, dy: -1}}
                    allowDataOverflow={true}
+                   hide={keyStyles.hidden}
             />,
             <Line
                 key={dataKey + "_line"}
                 type='monotone' dataKey={dataKey} stroke={color} dot={true}
                 yAxisId={dataKey+"_y"} xAxisId='x' animationDuration={500} isAnimationActive={false}
+                hide={keyStyles.hidden}
             />
         ];
     }
@@ -198,11 +201,14 @@ class VoltChart extends React.Component {
 
                 <XAxis xAxisId='x' dataKey='timestamp' type='number' tickFormatter={timeTickFormat}
                        domain={this.timeDomain()} allowDataOverflow={true}/>
-                <Legend onClick={(...a) => console.log(a) } />
+                <Legend onClick={line => {
+                    this.state.dataKeys[line.dataKey].hidden = !this.state.dataKeys[line.dataKey].hidden;
+                    this.forceUpdate();
+                }} />
                 <Tooltip formatter={tooltipFormatter} labelFormatter={tooltipLabelFormatter}/>
             </LineChart>
 
-            <input type='button' value={this.state.paused && 'Play' || 'Pause'} onClick={(ev) => {
+            <input type='button' value={this.state.paused && 'Play' || 'Pause'} onClick={ev => {
                 ev.target.value = 'Play';
                 this.setState({paused: !this.state.paused});
             }}/>
