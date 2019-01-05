@@ -1,37 +1,12 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
-import {LineChart, Line, XAxis, YAxis, Legend, Tooltip} from 'recharts';
+import {LineChart, Line, XAxis, YAxis, Legend, Tooltip, ReferenceLine, CartesianGrid} from 'recharts';
+
+import {pyTime, parametrizeURL, ArrayExt} from './utils';
 
 const POSTBUFFER = 200;
 const PREBUFFER = 10;
 const POLL_DELAY = 5;
-
-/**
- * @return {number}
- */
-function pyTime() {
-    return Math.floor(Date.now() / 1000);
-}
-
-Array.prototype.last = function (field) {
-    let ret = this[this.length - 1];
-    return field !== undefined && ret !== undefined && ret[field] || ret;
-};
-
-Array.prototype.first = function (field) {
-    let ret = this[0];
-    return field !== undefined && ret !== undefined && ret[field] || ret;
-};
-
-
-
-
-/**
- * @return {string}
- */
-function parametrizeURL(url, params) {
-    return url + '?' +  new URLSearchParams(params).toString();
-}
 
 
 const colors = [
@@ -44,7 +19,6 @@ const colors = [
     "#22b4c4",
     "#f032e6",
     "#266960",
-    // "#706565",
     "#7A5324",
     "#800000",
     "#000075",
@@ -59,7 +33,9 @@ class VoltChart extends React.Component {
             devices: [],
             data: [],
             dataKeys: {},
+            graphKeys: {},
             colorStack: [...Array(colors.length).keys()],
+            labelColors: {},
         };
         this.last_timestamp = 0;
         this.last_poll = 0;
@@ -108,18 +84,24 @@ class VoltChart extends React.Component {
                             measurements[row.timestamp] = measurements[row.timestamp] || {timestamp: row.timestamp};
                             measurements[row.timestamp][row.label || ''] = row.value;
 
+
+                            let label = row.label.split('|')[0];
+                            let graphKey = row.label.split('|')[1] || '';
+                            this.state.graphKeys[graphKey] = true;
+                            this.state.labelColors[label] = this.state.labelColors[label] || this.state.colorStack.pop();
+
                             this.state.dataKeys[row.label] = this.state.dataKeys[row.label] || {
-                                color: this.state.colorStack.pop(),  // todo: index error if out of colors
+                                color: this.state.labelColors[label],  // todo: index error if out of colors
                                 hidden: false,
                             };
-                            this.state.dataKeys[row.label].timestamp = row.timestamp;
 
+                            this.state.dataKeys[row.label].timestamp = row.timestamp;
                             row.value < 0 && (this.state.dataKeys[row.label].neg = true);
                         });
 
                         measurements = Object.values(measurements).sort((a, b) => a.timestamp - b.timestamp);
                         this.buffer = this.buffer.concat(measurements);
-                        this.last_timestamp = measurements.last('timestamp') || this.last_timestamp;
+                        this.last_timestamp = ArrayExt(measurements).last('timestamp') || this.last_timestamp;
                     }
                     this.is_polling = false;
                 })
@@ -130,6 +112,14 @@ class VoltChart extends React.Component {
     componentDidMount() {
         setInterval(this.tick.bind(this), 1000);
         this.fetchDevices();
+    }
+
+    resetState() {
+        this.setState({
+                device_id: ev.target.value,
+                data: [],
+                dataKeys: {},
+                colorStack: [...Array(colors.length).keys()],})
     }
 
     tick() {
@@ -145,7 +135,7 @@ class VoltChart extends React.Component {
         !item.is_fake && data.push(item);
 
         let refresh = false;
-        while(cursor >= this.buffer.first('timestamp') || 0) {
+        while(cursor >= ArrayExt(this.buffer).first('timestamp') || 0) {
             data.push(this.buffer.shift());
             refresh = true;
         }
@@ -155,30 +145,15 @@ class VoltChart extends React.Component {
     renderLine(dataKey, i){
         let keyStyles = this.state.dataKeys[dataKey];
         let color = keyStyles.hidden ? "#a09292" : colors[keyStyles.color];
-        let orientation = i % 2 == 1;
 
-        let max = 0.0;
-        this.state.data.forEach(row => row[dataKey] && row[dataKey] > max && (max = row[dataKey]));
-        max = Math.ceil(max) + Math.ceil(max / 10);
-        let min = keyStyles.neg && -max || 0.0;
-
-        return [
-            <YAxis yAxisId={dataKey+"_y"} type='number' dataKey={dataKey} domain={[min, max]}
-                   tick={{fill: "black"}} stroke={color}  orientation={orientation ?  'right' : 'left'}
-                   label={{value: dataKey, position: 'top', fill: color, dx: orientation ? -25: 25, dy: -1}}
-                   allowDataOverflow={true}
-                   hide={keyStyles.hidden}
-            />,
-            <Line
-                key={dataKey + "_line"}
+        return <Line
+                key={dataKey + "_line"} name={dataKey.split('|')[0]}
                 type='monotone' dataKey={dataKey} stroke={color} dot={true}
-                yAxisId={dataKey+"_y"} xAxisId='x' animationDuration={500} isAnimationActive={false}
-                hide={keyStyles.hidden}
-            />
-        ];
+                yAxisId='y' xAxisId='x' animationDuration={500} isAnimationActive={false}
+                hide={keyStyles.hidden} />;
     }
 
-    render() {
+    renderGraph(graphKey) {
         const timeTickFormat = t => {
             t = new Date(t*1000);
             let min = ("" + t.getMinutes()).padStart(2, "0");
@@ -194,39 +169,71 @@ class VoltChart extends React.Component {
             return new Date(t*1000).toLocaleString();
         };
 
-        return <div>
+        let max = 0.0;
+        this.state.data.forEach(row => {
+            Object.keys(row).forEach(key => {
+                let value = row[key];
+                let lineGraph = key.split('|')[1] || '';
+                key !== 'timestamp' && lineGraph === graphKey && Math.abs(value) > max
+                && ( max = Math.abs(value) );
+            });
+        });
+        max = Math.ceil(max) + Math.ceil(max / 10);
+        let yticks = [-max, -max / 2, 0, max / 2, max ];
+        let xticks = [];
+        let xdomain = this.timeDomain();
+        for(let i = xdomain[0]; i <= xdomain[1]; i+=2)
+            xticks.push(i);
+
+        return <div key={graphKey+'_graph'}>
+            {graphKey ? <h1>{graphKey}</h1> : undefined}
             <LineChart width={750} height={250} data={[...this.state.data]} margin={{top:20}}>
 
-                 {Object.keys(this.state.dataKeys).map((k, i) => this.renderLine(k, i))}
+                 {
+                     Object.keys(this.state.dataKeys)
+                     .filter(k => (k.split('|')[1] || '') === graphKey)
+                     .map((k, i) => this.renderLine(k, i))
+                 }
 
                 <XAxis xAxisId='x' dataKey='timestamp' type='number' tickFormatter={timeTickFormat}
-                       domain={this.timeDomain()} allowDataOverflow={true}/>
+                       domain={xdomain} allowDataOverflow={true} ticks={xticks} />
+                <YAxis yAxisId='y' type='number' domain={[-max, max]} allowDataOverflow={true} ticks={yticks}/>
+
                 <Legend onClick={line => {
                     this.state.dataKeys[line.dataKey].hidden = !this.state.dataKeys[line.dataKey].hidden;
                     this.forceUpdate();
                 }} />
                 <Tooltip formatter={tooltipFormatter} labelFormatter={tooltipLabelFormatter}/>
+                <CartesianGrid strokeDasharray="2 2"/>
             </LineChart>
+        </div>;
+    }
 
-            <input type='button' value={this.state.paused && 'Play' || 'Pause'} onClick={ev => {
+    render(){
+        return <div>
+            {Object.keys(this.state.graphKeys).map(k => this.renderGraph(k))}
+
+             <input type='button' value={this.state.paused && 'Play' || 'Pause'} onClick={ev => {
                 ev.target.value = 'Play';
                 this.setState({paused: !this.state.paused});
             }}/>
-            <select value={this.state.device_id} 
+            <select value={this.state.device_id}
                 onChange={ev =>
                     this.setState({
                         device_id: ev.target.value,
                         data: [],
                         dataKeys: {},
-                        colorStack: [...Array(colors.length).keys()],})
+                        graphKeys: {},
+                        colorStack: [...Array(colors.length).keys()],
+                        labelColors: {},
+                    })
                 }>
 
                 {this.state.devices.map(d =>
                     <option key={d.device_id} value={d.device_id}>{d.device_id}</option>)}
             </select>
-        </div>;
+        </div>
     }
-
 
 }
 
