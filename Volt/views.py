@@ -9,7 +9,7 @@ class Views:
 
     @staticmethod
     def testReact(request: HttpRequest):
-        return render(request, 'react.html', {'api': request.get_host() + '/api/'})
+        return render(request, 'demo.html')
 
 
 def get(*args, view: str, **kwargs):

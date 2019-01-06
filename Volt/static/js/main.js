@@ -237,8 +237,7 @@ class VoltChart extends React.Component {
 
 }
 
-const element = <VoltChart name="world" />;
 ReactDOM.render(
-  element,
+  <VoltChart />,
   document.getElementById('react')
 );
