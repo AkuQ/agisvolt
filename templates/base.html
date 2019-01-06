@@ -5,6 +5,7 @@
  <title>{% block title %}{% endblock %}</title>
  </head>
  <body>
+    <script>const CSRF_TOKEN = "{{ csrf_token }}";</script>
     {% block content %}{% endblock %}
  </body>
 </html>
