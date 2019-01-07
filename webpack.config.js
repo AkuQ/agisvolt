@@ -5,7 +5,10 @@ var BundleTracker = require('webpack-bundle-tracker');
 module.exports = {
   context: __dirname,
 
-  entry: './Volt/static/js/main',
+  entry: {
+      demo: './Volt/static/js/demo',
+      login: './Volt/static/js/login'
+  },
 
   output: {
       path: path.resolve('./Volt/static/bundles/'),
