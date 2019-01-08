@@ -4,9 +4,19 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User, Permission, Group
 from django.http import HttpResponse, HttpResponseNotFound, HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
+from django.views import View
 
 
-class Views:
+class ViewsMeta(type):
+    def __getattribute__(self, item):
+        ret = super().__getattribute__(item)
+        if type(ret) == type:
+            return ret.as_view()
+        else:
+            return ret
+
+
+class Views(metaclass=ViewsMeta):
     @staticmethod
     def index(request: HttpRequest):
         if request.user.is_authenticated:
@@ -32,22 +42,23 @@ class Views:
         user.groups.add(Group.objects.get(name='unverified_users'))
         return render(request, 'login.html')
 
-    @staticmethod
-    def login(request: HttpRequest):
-        data = json.loads(request.body.decode() or '{}')  # type: dict
-        username = data.get('email', '')
-        password = data.get('password', '')
+    class login(View):
+        def get(self, request: HttpRequest):
+            if request.user.is_authenticated:
+                return HttpResponseRedirect('/', status=302)
+            else:
+                return render(request, 'login.html')
 
-        user = authenticate(request, username=username, password=password)
+        def post(self, request: HttpRequest):
+            data = json.loads(request.body.decode() or '{}')  # type: dict
+            username = data.get('email', '')
+            password = data.get('password', '')
 
-        if request.user.is_authenticated:
-            return HttpResponseRedirect('/', status=302)
-        elif user is not None:
-            login(request, user)
-            return HttpResponseRedirect('/', status=302)
-        elif request.method.upper() == 'GET':
-            return render(request, 'login.html')
-        return HttpResponseNotFound()
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return HttpResponseRedirect('/', status=302)
+            return HttpResponseNotFound()  # todo better
 
     @staticmethod
     def logout(request: HttpRequest):
