@@ -24,5 +24,6 @@ urlpatterns = [
     path('api/devices/', api.devices.as_view()),
     path('api/measurements/', api.measurements.as_view()),
     # Views:
+    path('', views.get),
     path('<str:view>/', views.get),
 ]

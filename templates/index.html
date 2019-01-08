@@ -2,12 +2,12 @@
 {% load render_bundle from webpack_loader %}
 {% block title %}AGIS login{% endblock title %}
 {% block content %}
-    <div id="login"></div>
-    <div id="register"></div>
-    <div id="logout"></div>
-    {% render_bundle 'login' %}
     {% if user.is_authenticated %}
-        <p>User: {{ user.get_username }}</p>
+        <p>INDEX</p>
+        <div id="login"></div>
+        <div id="register"></div>
+        <div id="logout"></div>
+        {% render_bundle 'login' %}
     {% else %}
         <p>Not logged in</p>
     {% endif %}
