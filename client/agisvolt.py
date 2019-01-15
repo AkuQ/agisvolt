@@ -30,8 +30,6 @@ class APIHandler:
         :param callback: Callback function for handling potential errors, in normal operation recieves None or HTTPError
             as first parameter.
         """
-        # Todo: make asynchronous
-
         def send():
             nonlocal self, callback
             with self._lock:
