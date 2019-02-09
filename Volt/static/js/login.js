@@ -53,9 +53,6 @@ class Register extends React.Component {
     submit(ev) {
         ev.preventDefault();
         register(this.state)
-        .then((result) => {
-            console.log(result);
-        })
     }
 
     render() {
