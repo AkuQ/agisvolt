@@ -20,6 +20,7 @@ class Login extends React.Component {
 
     render() {
         return <form onSubmit={ev => this.submit(ev)} method='post'>
+            <fieldset disabled={django.user.is_authenticated}>
             <label>
                 Email:
                 <input type='text' value={this.state.email}
@@ -33,6 +34,7 @@ class Login extends React.Component {
             </label>
             <br/>
             <input type='submit' value='Login'/>
+            </fieldset>
         </form>;
     }
 }
@@ -57,6 +59,7 @@ class Register extends React.Component {
 
     render() {
         return <form onSubmit={ev => this.submit(ev)} method='post'>
+            <fieldset disabled={django.user.is_authenticated}>
             <label>
                 Email:
                 <input type='text' value={this.state.email}
@@ -82,6 +85,7 @@ class Register extends React.Component {
             </label>
             <br/>
             <input type='submit' value='Register'/>
+            </fieldset>
         </form>;
     }
 }
