@@ -15,10 +15,7 @@ class Login extends React.Component {
 
     submit(ev) {
         ev.preventDefault();
-        login(this.state)
-        .then((result) => {
-            console.log(result);
-        })
+        login(this.state);
     }
 
     render() {
@@ -93,30 +90,15 @@ class Register extends React.Component {
 }
 
 class Logout extends React.Component {
-    click(ev) {
-        logout().then((result) => console.log(result));
-    }
-
     render() {
         return <div>
-            <input type='button' value={'Logout'} onClick={ev => this.click(ev)}/>
+          <input type='button' value={'Logout'} onClick={ev => logout()} disabled={!django.user.is_authenticated}/>
         </div>
     }
 }
 
 
-
-ReactDOM.render(
-    <Register />,
-    document.getElementById('register')
-);
-
-ReactDOM.render(
-    <Login />,
-    document.getElementById('login')
-);
-
-ReactDOM.render(
-    <Logout />,
-    document.getElementById('logout')
-);
+let target;
+(target = document.getElementById('register')) && ReactDOM.render(<Register />, target);
+(target = document.getElementById('login')) &&  ReactDOM.render(<Login />, target);
+(target = document.getElementById('logout')) && ReactDOM.render(<Logout />, target);
