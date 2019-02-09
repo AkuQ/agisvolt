@@ -1,4 +1,4 @@
-import parametrizeURL from './utils';
+import {parametrizeURL} from './utils';
 
 /**
  *
