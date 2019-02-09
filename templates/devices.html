@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}Devices{% endblock title %}
+{% block content %}
+    <div id="devices"></div>
+    {% render_bundle 'devices' %}
+{% endblock content %}

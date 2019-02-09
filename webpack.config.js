@@ -7,7 +7,9 @@ module.exports = {
 
   entry: {
       demo: './Volt/static/js/demo',
-      login: './Volt/static/js/login'
+      login: './Volt/static/js/login',
+      nav: './Volt/static/js/nav',
+      devices: './Volt/static/js/devices',
   },
 
   output: {

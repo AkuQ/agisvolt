@@ -29,6 +29,10 @@ class Views(metaclass=ViewsMeta):
         return render(request, 'demo.html')
 
     @staticmethod
+    def devices(request: HttpRequest):
+        return render(request, 'devices.html')
+
+    @staticmethod
     def register(request: HttpRequest):
         data = json.loads(request.body.decode() or '{}')  # type: dict
 
