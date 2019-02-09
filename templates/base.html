@@ -1,3 +1,5 @@
+{% load customtags %}
+
 <!DOCTYPE html>
 <html lang="en">
  <head>
@@ -5,7 +7,9 @@
  <title>{% block title %}{% endblock %}</title>
  </head>
  <body>
-    <script>const CSRF_TOKEN = "{{ csrf_token }}";</script>
+    <script>
+        const django = JSON.parse("{% context_json %}");
+    </script>
     {% block content %}{% endblock %}
  </body>
 </html>

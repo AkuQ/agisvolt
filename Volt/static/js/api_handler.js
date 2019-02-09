@@ -15,7 +15,7 @@ function api_call(method, route, data={}) {
         mode: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': CSRF_TOKEN,
+            'X-CSRFToken': django.csrf_token,
         },
         credentials: 'same-origin',
         redirect: 'follow',
