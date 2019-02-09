@@ -2,7 +2,7 @@ import json
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User, Permission, Group
-from django.http import HttpResponse, HttpResponseNotFound, HttpRequest, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseNotFound, HttpRequest, HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render
 from django.views import View
 
@@ -25,7 +25,7 @@ class Views(metaclass=ViewsMeta):
             return HttpResponseRedirect('/login')
 
     @staticmethod
-    def testReact(request: HttpRequest):
+    def demo(request: HttpRequest):
         return render(request, 'demo.html')
 
     @staticmethod
@@ -45,7 +45,7 @@ class Views(metaclass=ViewsMeta):
     class login(View):
         def get(self, request: HttpRequest):
             if request.user.is_authenticated:
-                return HttpResponseRedirect('/', status=302)
+                return HttpResponseRedirect('/')
             else:
                 return render(request, 'login.html')
 
@@ -57,13 +57,13 @@ class Views(metaclass=ViewsMeta):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                return HttpResponseRedirect('/', status=302)
-            return HttpResponseNotFound()  # todo better
+                return HttpResponseRedirect('/')
+            return HttpResponseBadRequest(status=401)
 
     @staticmethod
     def logout(request: HttpRequest):
         logout(request)
-        return HttpResponseRedirect('/login', status=302)
+        return HttpResponseRedirect('/login')
 
 
 def get(*args, view='index', **kwargs):
