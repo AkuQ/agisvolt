@@ -1,9 +1,14 @@
+import os
+import uuid
+import json
+
 from django.contrib.auth.context_processors import PermWrapper
 from django.template import RequestContext
 from django.contrib.auth.models import User, AnonymousUser
 from django import template
 from django.utils.html import escapejs
-import json
+
+from agisvolt import settings
 
 
 register = template.Library()
@@ -32,3 +37,15 @@ def context_json(context: RequestContext):
             js[k] = str(c)
 
     return escapejs(json.dumps(js))
+
+
+@register.simple_tag()
+def debug_decache():
+
+    if settings.DEBUG:
+        version = uuid.uuid1()
+    else:
+        version = os.environ.get('PROJECT_VERSION')
+        if version is None:
+            version = '1'
+    return '?__v__={version}'.format(version=version)
