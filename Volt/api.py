@@ -4,10 +4,8 @@ from time import time
 
 from django.db import transaction, IntegrityError
 from django.db.models import Q
-from django.http import HttpRequest as Request, JsonResponse, HttpResponseBadRequest, HttpResponseNotFound
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import View
+from django.http import HttpRequest as Request, JsonResponse, HttpResponseBadRequest
+from rest_framework.views import APIView
 
 from .models import Measurement, Device
 
@@ -24,21 +22,22 @@ def test_randoms(start=0, end=None):
             ret.append({'timestamp': t, 'value': v, 'label': k})
         if random() > .5:
             ret.append({'timestamp': t, 'value': 2, 'label': 't4'})
+        for k, v in {'t1': random() * 5, 't2': random() * 5, 't3': random() * 5 - 3}.items():
+            ret.append({'timestamp': t, 'value': v, 'label': k + '|B'})
     return ret
 
 
-# noinspection PyMethodMayBeStatic
-@method_decorator(csrf_exempt, name='dispatch')
-class devices(View):
+class devices(APIView):
     def get(self, request: Request):
         devices = list(Device.objects.all().values())
         devices.append({'device_id': 'TEST'})
         return JsonResponse({'devices': devices})
 
+    def put(self, request: Request):
+        pass
 
-# noinspection PyMethodMayBeStatic
-@method_decorator(csrf_exempt, name='dispatch')
-class measurements(View):
+
+class measurements(APIView):
     def put(self, request: Request):
         params = json.loads(request.body.decode())  # type: dict
         device_id = params.get('device_id', None)
@@ -69,3 +68,5 @@ class measurements(View):
 
         measurements = Measurement.objects.filter(*filters).values('timestamp', 'value', 'label')
         return JsonResponse({'measurements': list(measurements)})
+
+

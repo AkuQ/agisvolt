@@ -1,4 +1,5 @@
 django
 django-webpack-loader
 django-crontab
+djangorestframework
 mysqlclient
