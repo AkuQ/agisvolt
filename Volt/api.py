@@ -5,7 +5,7 @@ from time import time
 from django.db import transaction, IntegrityError
 from django.db.models import Q
 from django.http import HttpRequest as Request, JsonResponse, HttpResponseBadRequest
-from rest_framework.views import APIView
+from django.views import View
 
 from .models import Measurement, Device
 
@@ -27,7 +27,7 @@ def test_randoms(start=0, end=None):
     return ret
 
 
-class devices(APIView):
+class devices(View):
     def get(self, request: Request):
         devices = list(Device.objects.all().values())
         devices.append({'device_id': 'TEST'})
@@ -37,7 +37,7 @@ class devices(APIView):
         pass
 
 
-class measurements(APIView):
+class measurements(View):
     def put(self, request: Request):
         params = json.loads(request.body.decode())  # type: dict
         device_id = params.get('device_id', None)

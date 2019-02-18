@@ -15,14 +15,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.views.decorators.csrf import csrf_exempt
 
 from Volt import views, api
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     # API:
-    path('api/devices/', api.devices.as_view()),
-    path('api/measurements/', api.measurements.as_view()),
+    path('api/devices/', csrf_exempt(api.devices.as_view())),
+    path('api/measurements/', csrf_exempt(api.measurements.as_view())),
     # Views:
     path('', views.get),
     path('<str:view>/', views.get),
