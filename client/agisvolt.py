@@ -1,16 +1,74 @@
 import json
 from http.client import HTTPResponse
+from json import JSONDecodeError
 from threading import Lock, Thread
 from urllib.error import HTTPError
 from urllib.request import Request, build_opener, HTTPHandler
 
+from client.utils import getserial
+
 
 class APIHandler:
-    def __init__(self, host, device_id):
-        self._device_id = device_id
+    def __init__(self, host):
+        self._state = None
+
         self._host = host
         self._measurements = {}
         self._lock = Lock()
+
+        self._hardware_id = getserial()
+        self._load()
+
+    @property
+    def device_id(self):
+        return self._state['device_id']
+
+    @property
+    def token(self):
+        return self._state['token']
+
+    @property
+    def hardware_id(self):
+        return self._hardware_id
+
+    def _load(self):
+        try:
+            with open('agisvolt.json', 'r') as f:
+                self._state = json.load(f)
+        except (JSONDecodeError, IOError):
+            self._state = {'device_id': None, 'token': None}
+
+    def _save(self):
+        state = self._state.copy()
+        try:
+            with open('agisvolt.json', 'w') as f:
+                f.writelines(json.dumps(state))
+            self._state = state
+            return True
+        except IOError:
+            return False
+            # todo: cancel register if device_id changed (presumably from None to brand new ID)
+
+    def _api_call(self, method: str, route: str, content: dict) -> (dict, Exception):
+        try:
+            request = Request( self._host + route, method=method, data=json.dumps(content).encode(), headers={
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0'
+            })
+
+            response = build_opener(HTTPHandler).open(request)  # type: HTTPResponse
+            if response.code in range(200, 300):
+                return json.loads(response.readlines()[0].decode()), None
+            else:
+                return None, HTTPError(
+                    code=response.code,
+                    url=response.geturl(),
+                    hdrs=response.headers,
+                    msg='Unexpected response code from API, with messsage "%s"' % response.msg,
+                    fp=response.fp
+                )
+        except Exception as e:
+            return None, e
 
     def append_measurement(self, timestamp: int, value: float, label=''):
         """
@@ -34,32 +92,33 @@ class APIHandler:
             nonlocal self, callback
             with self._lock:
                 if len(self._measurements) > 0:
-                    try:
-                        request = Request(
-                            self._host + '/api/measurements/',
-                            method='PUT',
-                            headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'},
-                            data=json.dumps({
-                                'device_id': self._device_id,
-                                'measurements': list(self._measurements.values())
-                            }).encode(),
-                        )
-
-                        response = build_opener(HTTPHandler).open(request)  # type: HTTPResponse
-                        if response.code in range(200, 300):
-                            self._measurements.clear()
-                            return True
-                        else:
-                            callback(HTTPError(
-                                code=response.code,
-                                url=response.geturl(),
-                                hdrs=response.headers,
-                                msg='Unexpected response code from API, with messsage "%s"' % response.msg,
-                                fp=response.fp
-                            ))
-                    except Exception as e:
-                        callback(e)
+                    res, err = self._api_call('POST', '/api/measurements/', {
+                        'device_id': self._device_id,
+                        'measurements': list(self._measurements.values())
+                    })
+                    if err:
+                        callback(err)
+                    else:
+                        self._measurements.clear()
         Thread(target=send).start()
+
+    def register(self):
+        content = {k: v for k, v in {
+            'device_id': self.device_id,
+            'hardware_id': self.hardware_id,
+            'token': self.token,
+        }.items() if v is not None}
+        res, err = self._api_call('PUT', '/api/devices/', content)
+
+        if not err:
+            for k, v in res.items():
+                if k in self._state:
+                    self._state[k] = v
+
+            self._save()  # todo: if not save cancel registration
+            return True
+        else:
+            return False
 
 
 # # Sample code (generate fake random datapoints and send them instantly):
