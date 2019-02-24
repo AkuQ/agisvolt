@@ -53,7 +53,9 @@ class Device(Model):
 class DeviceSerializer(ModelSerializer):
     class Meta:
         model = Device
-        extra_kwargs = {'token': {'write_only': True}, 'salt': {'write_only': True}}
+        extra_kwargs = {
+            'token': {'write_only': True}, 'salt': {'write_only': True}, 'hardware_id': {'write_only': True}
+        }  # todo: considering hashing hardware IDs, considered sensitive information
         fields = '__all__'
 
 
