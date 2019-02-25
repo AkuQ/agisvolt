@@ -5,9 +5,10 @@ import {parametrizeURL} from './utils';
  * @param method {String}
  * @param route {String}
  * @param data {Object}
+ * @param redirect {Boolean}
  * @returns {Promise<Response>}
  */
-function api_call(method, route, data={}) {
+function callAPI(method, route, data={}, redirect=true) {
     method = method.toUpperCase();
 
     let conf = {
@@ -27,21 +28,25 @@ function api_call(method, route, data={}) {
 
     let redirect_url;
     return fetch(route, conf)
-    .then(res => {
-        if(res.redirected) redirect_url = res.url;
-        return res;
-    })
-    .finally(() => {
-        redirect_url && (window.location.href = redirect_url) && window.location.reload();
-    });
+        .then(res => {
+            if(res.redirected && redirect) redirect_url = res.url;
+            return res;
+        })
+        .finally(() => {
+            redirect_url && (window.location.href = redirect_url) && window.location.reload();
+        });
 }
 
 export function register(data) {
-    return api_call('POST', '/register/', data)
+    return callAPI('POST', '/register/', data)
 }
 export function login(data) {
-    return api_call('POST', '/login/', data)
+    return callAPI('POST', '/login/', data)
 }
 export function logout() {
-    return api_call('POST', '/logout/')
+    return callAPI('POST', '/logout/')
+}
+
+export function fetchDevices() {
+    return callAPI('GET', '/api/devices',{}, false).then( res => res.json());
 }
