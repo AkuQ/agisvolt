@@ -1,3 +1,4 @@
+uwsgidecorators
 django
 djangorestframework
 django-webpack-loader
