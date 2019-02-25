@@ -80,7 +80,7 @@ class measurements(View):
         device = Device.objects.filter(device_id=device_id).first()
         if not device:
             return HttpResponseNotFound()
-        if not device.authenticate(device.authenticate(params.get('token', ''))):
+        if not device.authenticate(params.get('token', '')):
             return HttpResponseForbidden()
 
         try:
