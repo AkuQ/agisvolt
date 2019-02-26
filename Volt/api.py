@@ -12,7 +12,8 @@ from django.utils.crypto import get_random_string
 from django.contrib.gis.geoip2 import GeoIP2
 
 from agisvolt.constants import PERM
-from .models import Measurement, Device, DeviceSerializer
+from .models import Measurement, Device
+from .serializers import DeviceSerializer
 
 
 def test_randoms(start=0, end=None):
