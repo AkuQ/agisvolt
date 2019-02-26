@@ -21,7 +21,7 @@ def getserial():
         _get_serial_from_cpuinfo() or \
         _get_serial_from_dmi('system') or \
         _get_serial_from_dmi('board') or \
-        ('TEST', 'TEST', 'TEST')
+        (None, None, None)
     if not serial:
         raise RuntimeError("Could not find hardware ID")
     else:
