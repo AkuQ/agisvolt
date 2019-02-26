@@ -139,3 +139,4 @@ STATIC_ROOT = os.path.join(BASE_DIR, "Volt/static/")
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "Volt/media/")
 
+GEOIP_PATH = os.path.join(BASE_DIR, 'geoip/city.mmdb')
