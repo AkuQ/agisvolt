@@ -3,12 +3,8 @@
 {% block title %}AGIS login{% endblock title %}
 {% block content %}
     <div id="login"></div>
-    <div id="register"></div>
-    <div id="logout"></div>
     {% render_bundle 'login' %}
     {% if user.is_authenticated %}
-        <p>User: {{ user.get_username }}</p>
-    {% else %}
-        <p>Not logged in</p>
+        <p>Already logged in</p>
     {% endif %}
 {% endblock content %}

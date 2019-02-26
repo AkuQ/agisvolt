@@ -1,15 +1,18 @@
+{% load render_bundle from webpack_loader %}
 {% load customtags %}
+{% load static %}
 
 <!DOCTYPE html>
 <html lang="en">
  <head>
  <meta charset="UTF-8">
  <title>{% block title %}{% endblock %}</title>
+ <link rel="stylesheet" type="text/css" href="{% static 'animation.css' %}{% debug_decache %}">
  </head>
  <body>
-    <script>
-        const django = JSON.parse("{% context_json %}");
-    </script>
+    <script>const django = JSON.parse("{% context_json %}")</script>
+    <div id="nav"></div>
+    {% render_bundle 'nav' %}
     {% block content %}{% endblock %}
  </body>
 </html>
