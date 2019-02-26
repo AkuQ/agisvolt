@@ -51,7 +51,12 @@ class APIHandler:
 
     def _api_call(self, method: str, route: str, content: dict) -> (dict, Exception):
         try:
-            request = Request( self._host + route, method=method, data=json.dumps(content).encode(), headers={
+            content.update({k: v for k, v in {
+                'device_id': self.device_id,
+                'token': self.token,
+            }.items() if v is not None})
+
+            request = Request(self._host + route, method=method, data=json.dumps(content).encode(), headers={
                 'Content-Type': 'application/json',
                 'User-Agent': 'Mozilla/5.0'
             })
@@ -93,7 +98,6 @@ class APIHandler:
             with self._lock:
                 if len(self._measurements) > 0:
                     res, err = self._api_call('POST', '/api/measurements/', {
-                        'device_id': self._device_id,
                         'measurements': list(self._measurements.values())
                     })
                     if err:
@@ -103,13 +107,7 @@ class APIHandler:
         Thread(target=send).start()
 
     def register(self):
-        content = {k: v for k, v in {
-            'device_id': self.device_id,
-            'hardware_id': self.hardware_id,
-            'token': self.token,
-        }.items() if v is not None}
-        res, err = self._api_call('PUT', '/api/devices/', content)
-
+        res, err = self._api_call('PUT', '/api/devices/', {'hardware_id': self.hardware_id})
         if not err:
             for k, v in res.items():
                 if k in self._state:
