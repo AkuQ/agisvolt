@@ -32,7 +32,12 @@ def test_randoms(start=0, end=None):
 
 class devices(View):
     def get(self, request: Request):
-        devices = DeviceSerializer(Device.objects.all(), many=True)
+        devices = DeviceSerializer(
+            Device.objects.all(),
+            many=True,
+            avg_measurement=['Voltage'],
+            agg_lookback=int(time() - 60)
+        )
         return JsonResponse({'devices': devices.data})
 
     def put(self, request: Request):

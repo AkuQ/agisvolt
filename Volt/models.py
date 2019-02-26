@@ -4,7 +4,7 @@ from hashlib import sha256, md5
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
-from django.db.models import Model
+from django.db.models import Model, Avg
 from django.db.models import \
     BigAutoField    as BigAuto, \
     ForeignKey      as Foreign, \
@@ -13,6 +13,7 @@ from django.db.models import \
     CharField       as Char, \
     IntegerField    as Integer
 
+from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
 from agisvolt.settings import SECRET_KEY
@@ -50,6 +51,24 @@ class Device(Model):
         return b64encode(sha256((SECRET_KEY + p + salt_md5).encode()).digest()).decode()
 
 
+class Measurement(Model):
+    class Meta:
+        unique_together = (('device_id', 'timestamp', 'label'),)
+        ordering = ['timestamp']
+
+    measurement_id = BigAuto(primary_key=True)
+    device_id = Foreign(Device, related_name='measurements', db_column='device_id',  on_delete=models.CASCADE)
+    timestamp = BigInteger()
+    value = Float()
+    label = Char(max_length=128, default='')
+
+
+class MeasurementSerializer(ModelSerializer):
+    class Meta:
+        model = Measurement
+        fields = '__all__'
+
+
 class DeviceSerializer(ModelSerializer):
     class Meta:
         model = Device
@@ -58,14 +77,22 @@ class DeviceSerializer(ModelSerializer):
         }  # todo: considering hashing hardware IDs, considered sensitive information
         fields = '__all__'
 
+    avg_measurements = SerializerMethodField()
 
-class Measurement(Model):
-    class Meta:
-        unique_together = (('device_id', 'timestamp', 'label'),)
-        ordering = ['timestamp']
+    def __init__(self, *args, avg_measurement: list, agg_lookback: int=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._avg_measurement = avg_measurement
+        self._agg_lookback = agg_lookback
 
-    measurement_id = BigAuto(primary_key=True)
-    device_id = Foreign(Device, on_delete=models.CASCADE, db_column='device_id')
-    timestamp = BigInteger()
-    value = Float()
-    label = Char(max_length=128, default='')
+    def get_avg_measurements(self, device):  #timestamp__gte=self._agg_lookback
+        return {
+            m['label']: m['avg'] for m in Measurement.objects
+            .filter(device_id=device.device_id, label__in=self._avg_measurement, )
+            .order_by()  # empty order_by required for groupibf by values('label') to work  # todo: remove Measuerement.Meta order_by, move ordering clause to serializer
+            .values('label')
+            .annotate(avg=Avg('value'))
+         }
+
+
+
+
