@@ -2,14 +2,16 @@ import json
 from random import random
 from time import time
 
+from django.contrib.auth.decorators import permission_required
 from django.db import transaction, IntegrityError
 from django.db.models import Q
-from django.http import HttpRequest as Request, JsonResponse, HttpResponseBadRequest, HttpResponseForbidden, \
-    HttpResponseNotFound
+from django.http import HttpRequest as Request
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
 from django.views import View
 from django.utils.crypto import get_random_string
 from django.contrib.gis.geoip2 import GeoIP2
 
+from agisvolt.constants import PERM
 from .models import Measurement, Device, DeviceSerializer
 
 
@@ -31,12 +33,14 @@ def test_randoms(start=0, end=None):
 
 
 class devices(View):
+
+    @permission_required(PERM.MONITOR_DEVICE)
     def get(self, request: Request):
         devices = DeviceSerializer(
             Device.objects.all(),
             many=True,
             avg_measurement=['Voltage'],
-            agg_lookback=int(time() - 60)
+            agg_lookback=int(time() - 10)
         )
         return JsonResponse({'devices': devices.data})
 
@@ -96,6 +100,7 @@ class measurements(View):
             return HttpResponseBadRequest(str(e))
         return JsonResponse({'count': len(measurements)})
 
+    @permission_required(PERM.MONITOR_DEVICE)
     def get(self, request: Request):
         params = request.GET.dict()  # type: dict
         device_id = params.get('device_id', 0)
