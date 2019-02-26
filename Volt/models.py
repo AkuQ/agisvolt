@@ -84,10 +84,10 @@ class DeviceSerializer(ModelSerializer):
         self._avg_measurement = avg_measurement
         self._agg_lookback = agg_lookback
 
-    def get_avg_measurements(self, device):  #timestamp__gte=self._agg_lookback
+    def get_avg_measurements(self, device):
         return {
             m['label']: m['avg'] for m in Measurement.objects
-            .filter(device_id=device.device_id, label__in=self._avg_measurement, )
+            .filter(device_id=device.device_id, label__in=self._avg_measurement, timestamp__gte=self._agg_lookback)
             .order_by()  # empty order_by required for groupibf by values('label') to work  # todo: remove Measuerement.Meta order_by, move ordering clause to serializer
             .values('label')
             .annotate(avg=Avg('value'))
