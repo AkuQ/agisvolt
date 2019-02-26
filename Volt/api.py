@@ -33,9 +33,10 @@ def test_randoms(start=0, end=None):
 
 
 class devices(View):
-
-    @permission_required(PERM.MONITOR_DEVICE)
     def get(self, request: Request):
+        if not request.user.has_perm(PERM.MONITOR_DEVICE):
+            return HttpResponseForbidden()
+
         devices = DeviceSerializer(
             Device.objects.all(),
             many=True,
@@ -100,8 +101,10 @@ class measurements(View):
             return HttpResponseBadRequest(str(e))
         return JsonResponse({'count': len(measurements)})
 
-    @permission_required(PERM.MONITOR_DEVICE)
     def get(self, request: Request):
+        if not request.user.has_perm(PERM.MONITOR_DEVICE):
+            return HttpResponseForbidden()
+
         params = request.GET.dict()  # type: dict
         device_id = params.get('device_id', 0)
         _from, _to = params.get('from', 0), params.get('to', None)
