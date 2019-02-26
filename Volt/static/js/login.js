@@ -29,7 +29,7 @@ class Login extends React.Component {
             <br/>
             <label>
                 Password:
-                <input type='text' value={this.state.password}
+                <input type='password' value={this.state.password}
                        onChange={(ev) => this.setState({password: ev.target.value})}/>
             </label>
             <br/>
@@ -68,7 +68,7 @@ class Register extends React.Component {
             <br/>
             <label>
                 Password:
-                <input type='text' value={this.state.password}
+                <input type='password' value={this.state.password}
                        onChange={(ev) => this.setState({password: ev.target.value})}/>
             </label>
             <br/>
