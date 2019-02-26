@@ -183,7 +183,9 @@ class Devices extends React.Component {
     zoom(ev) {
         ev.preventDefault();
         if(this.can_zoom) {
-            let z = this.state.zoom - ev.deltaY / 50.0 * this.state.zoom;
+            let z;
+            z = this.state.zoom - ev.deltaY / 50.0 * this.state.zoom;
+            z = Math.max( 0.5, Math.min(z, 15));
             this.positionMarkers(z, this.state.center);
         }
     }
@@ -232,21 +234,24 @@ class Devices extends React.Component {
         this.setState({zoom: zoom, center: center});
     }
 
-
-
     render() {
-        return <div style={{display: "flex"}}  onClick={ev =>this.setState({selected: []}, )} >
+        return <div style={{display: "flex"}}  onClick={ev => this.setState({selected: []}, )} >
             <div style={wrapperStyles} onWheel={ev => this.zoom(ev)} >
             <ComposableMap
                 ref={this.map}
                 projectionConfig={{ scale: 3500 }} //todo: set better projection
                 width={this.state.size[0]} height={this.state.size[1]}
                 style={{width: "100%", height: "auto"}}>
-                <ZoomableGroup center={this.state.center} zoom={this.state.zoom}
-                               onMoveStart={() => this.can_zoom=false}
-                               onMoveEnd={ev => {
-                                    this.positionMarkers(this.state.zoom, ev);
-                                    this.setState({center: ev}, () => this.can_zoom=true)}}
+                <ZoomableGroup
+                    center={this.state.center}
+                    zoom={this.state.zoom}
+                    // disablePanning={true}
+                    onClick={ev => this.move(ev)}
+                    onMoveStart={() => this.can_zoom=false}
+                    onMoveEnd={ev => {
+                        this.positionMarkers(this.state.zoom, ev);
+                        this.setState({center: ev}, () => this.can_zoom=true)}
+                    }
                 >
                 <Geographies geography="/static/world.json">
                     {(geographies, projection) =>
