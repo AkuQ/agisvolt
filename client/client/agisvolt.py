@@ -5,7 +5,7 @@ from threading import Lock, Thread
 from urllib.error import HTTPError
 from urllib.request import Request, build_opener, HTTPHandler
 
-from client.utils import getserial
+from .utils import getserial
 
 
 class APIHandler:

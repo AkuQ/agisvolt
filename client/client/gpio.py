@@ -1,8 +1,6 @@
 from time import sleep
 import RPi.GPIO as GPIO
 
-# 3.3V physical: 1, 17
-#
 
 # noinspection PyAttributeOutsideInit,PyPep8Naming
 class Voltmeter:
@@ -116,21 +114,20 @@ class Voltmeter:
         bits = control << 5 | single_ch << 4 | odd_ch << 3 | ch << 0
         self.MOSI = bits
 
-    def get_conversion(self) -> tuple:
-        """
-        :return: value, overflow status, raw bits
-        """
+    def get_conversion(self):
         self.CS = 0
         if self.EOC == 0:
             data = self.MISO
+            #print(bin(data)[2:].rjust(19, '0'))
             value = data & (2**16 - 1)
-            value = value if (data >> 15) & 0b1 else -value
-            overflow = ((data >> 16) ^ (data >> 15)) & 0b1 == 1
+            #print(str(value))
+            value = -value if (data >> 15) & 0b1 else value
+            overflow = ((data >> 15) ^ (data >> 16)) & 0b1 == 0
 
             if (data >> 17) & 0b1:
                 raise IOError()
 
-            print(bin(data)[2:].rjust(19, '0'))
+            # print(bin(data)[2:].rjust(19, '0'))
         else:
             data = None
             overflow = None
@@ -138,43 +135,5 @@ class Voltmeter:
         self.CS = 1
         return value, overflow, data
 
-
 def raises(e: Exception): raise e
-
-# voltmeter = Voltmeter()
-# voltmeter.open()
-# voltmeter.set_clock_mode()
-#
-# channels = list(zip(list(range(0, 16)) * 2, [True] * 8 + [False] * 8))
-# ref = 3300
-#
-# try:
-#     """
-#     ch = 4
-#     while 1:
-#         print('Channel +%d' % ch)
-#         voltmeter.set_channel(ch, True)
-#     """
-#     for i in range(10):
-#         print(list(channels))
-#         for ch, use_2nd_channel in channels:
-#             ch2 = str(-(ch + 1 - (ch % 2) * 2)) if use_2nd_channel else 'COM'
-#             print('Channel +%d / %s:' % (ch, ch2))
-#             voltmeter.set_channel(ch, use_2nd_channel)
-#             done = False
-#             while not done:
-#                 conversion = voltmeter.get_conversion()
-#                 if conversion is None:
-#                     sleep(0.1)
-#                 else:
-#                     conversion = conversion/(2**16)
-#                     print(str(conversion))
-#                     voltage = 0.5*ref*conversion
-#                     print("%s mV" % (str(voltage)))
-#                     print("\n")
-#                     done = True
-# except KeyboardInterrupt:
-#     pass
-#
-# voltmeter.close()
 
