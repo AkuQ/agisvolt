@@ -140,3 +140,5 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "Volt/media/")
 
 GEOIP_PATH = os.path.join(BASE_DIR, 'geoip/city.mmdb')
+
+SENDGRID_API_KEY = env.sendgrid_api_key
