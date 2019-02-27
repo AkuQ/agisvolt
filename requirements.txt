@@ -5,3 +5,4 @@ django-webpack-loader
 django-crontab
 geoip2
 mysqlclient
+sendgrid
