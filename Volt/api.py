@@ -2,10 +2,9 @@ import json
 from random import random
 from time import time
 
-from django.contrib.auth.decorators import permission_required
 from django.db import transaction, IntegrityError
 from django.db.models import Q
-from django.http import HttpRequest as Request
+from django.http import HttpRequest as Request, HttpResponse
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
 from django.views import View
 from django.utils.crypto import get_random_string
@@ -14,6 +13,7 @@ from django.contrib.gis.geoip2 import GeoIP2
 from agisvolt.constants import PERM
 from .models import Measurement, Device
 from .serializers import DeviceSerializer
+from .emails import SendEmail
 
 
 def test_randoms(start=0, end=None):
@@ -123,3 +123,20 @@ class measurements(View):
         return JsonResponse({'measurements': list(measurements)})
 
 
+class RouteMeta(type):
+    def __call__(cls, *args, path: str, **kwargs):
+        route = cls
+        for part in path.split('/'):
+            if hasattr(route, part):
+                route = getattr(route, part)
+            else:
+                return HttpResponseNotFound("Page does not exist.")
+        if type(route) == type:
+            route = route.as_view()
+        return route(*args, **kwargs)
+
+
+class API(metaclass=RouteMeta):
+    class test(View):
+        def get(self, request: Request):
+            return HttpResponse('test')
