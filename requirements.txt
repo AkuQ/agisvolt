@@ -1,3 +1,4 @@
+uwsgi
 uwsgidecorators
 django
 djangorestframework
