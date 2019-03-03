@@ -40,25 +40,6 @@ class Views(metaclass=RouteMeta):
         user.groups.add(Group.objects.get(name='unverified_users'))
         return render(request, 'login.html')
 
-    class _register:
-        def post(self, request: Request):
-            data = json.loads(request.body.decode() or '{}')  # type: dict
-
-            user = User.objects.create_user(
-                first_name=data.get('first_name', ''),
-                last_name=data.get('last_name', ''),
-                username=data.get('email', ''),
-                password=data.get('password', ''),
-                email=data.get('email', ''),
-            )
-            # user.groups.add(Group.objects.get(name='unverified_users'))
-            return render(request, 'login.html')
-
-        def get(self, request: Request):
-            params = request.GET.dict()  # type: dict
-
-            return HttpResponseRedirect('/')
-
     class login(View):
         def get(self, request: Request):
             if request.user.is_authenticated:
