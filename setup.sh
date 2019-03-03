@@ -7,6 +7,11 @@ source venv/bin/activate > /dev/null
 echo "Installing required pip packages..."
 pip install -r requirements.txt > /dev/null
 
+
+echo "Stopping old service..."
+systemctl stop agisvolt &> /dev/null
+systemctl disable agisvolt &> /dev/null
+
 echo "Creating systemd service file..."
 app_dir=$(pwd)
 echo '
@@ -21,8 +26,7 @@ ExecStart=/usr/bin/bash -c "cd '${app_dir}'; source venv/bin/activate; uwsgi uws
 WantedBy=multi-user.target
 ' > uwsgi/agisvolt.service
 
-systemctl stop agisvolt &> /dev/null
-systemctl disable agisvolt &> /dev/null
+echo "Starting service"
 systemctl enable ${app_dir}/uwsgi/agisvolt.service
 systemctl start agisvolt
 
