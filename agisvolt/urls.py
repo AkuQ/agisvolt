@@ -17,15 +17,13 @@ from django.contrib import admin
 from django.urls import path, re_path
 from django.views.decorators.csrf import csrf_exempt
 
-from Volt import views, api
+from Volt import views
 from Volt.api import API
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     # API:
-    path('api/devices/', csrf_exempt(api.devices.as_view())),
-    path('api/measurements/', csrf_exempt(api.measurements.as_view())),
     re_path(r'^api/(?P<path>[\w/]+)/$', csrf_exempt(API)),
     # Views:
     path('', views.get),
