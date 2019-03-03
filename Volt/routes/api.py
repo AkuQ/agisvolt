@@ -4,16 +4,18 @@ from time import time
 
 from django.db import transaction, IntegrityError
 from django.db.models import Q
-from django.http import HttpRequest as Request, HttpResponse
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
+from django.http import HttpRequest as Request
+from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
 from django.views import View
 from django.utils.crypto import get_random_string
 from django.contrib.gis.geoip2 import GeoIP2
 
 from agisvolt.constants import PERM
-from .models import Measurement, Device
-from .serializers import DeviceSerializer
-from .emails import SendEmail
+from Volt.models import Measurement, Device
+from Volt.serializers import DeviceSerializer
+from Volt.emails import SendEmail
+
+from Volt.routes import RouteMeta
 
 
 def test_randoms(start=0, end=None):
@@ -31,19 +33,6 @@ def test_randoms(start=0, end=None):
         for k, v in {'t1': random() * 5, 't2': random() * 5, 't3': random() * 5 - 3}.items():
             ret.append({'timestamp': t, 'value': v, 'label': k + '|B'})
     return ret
-
-
-class RouteMeta(type):
-    def __call__(cls, *args, path: str, **kwargs):
-        route = cls
-        for part in path.split('/'):
-            if hasattr(route, part):
-                route = getattr(route, part)
-            else:
-                return HttpResponseNotFound("Page does not exist.")
-        if type(route) == type:
-            route = route.as_view()
-        return route(*args, **kwargs)
 
 
 class API(metaclass=RouteMeta):
@@ -138,3 +127,5 @@ class API(metaclass=RouteMeta):
 
             measurements = Measurement.objects.filter(*filters).values('timestamp', 'value', 'label')
             return JsonResponse({'measurements': list(measurements)})
+
+
