@@ -15,7 +15,7 @@ Description=uWSGI instance to serve agisvolt
 
 [Service]
 ExecStartPre=-/usr/bin/bash -c "mkdir -p /run/agisvolt; chown nginx:nginx /run/agisvolt"
-ExecStart=/usr/bin/bash -c "cd '$app_dir'; source venv/bin/activate; uwsgi uwsgi/uwsgi.ini"
+ExecStart=/usr/bin/bash -c "cd '${app_dir}'; source venv/bin/activate; uwsgi uwsgi/uwsgi.ini"
 
 [Install]
 WantedBy=multi-user.target
