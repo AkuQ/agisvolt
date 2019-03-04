@@ -5,6 +5,7 @@ python36 -m venv venv > /dev/null
 source venv/bin/activate > /dev/null
 
 echo "Installing required pip packages..."
+pip install --upgrade pip > /dev/null
 pip install -r requirements.txt > /dev/null
 
 
@@ -30,6 +31,9 @@ echo "Starting service"
 systemctl enable ${app_dir}/uwsgi/agisvolt.service
 systemctl start agisvolt
 
+
+echo "Install NodeJS modules..."
+npm install > /dev/null
 
 echo "Compiling bundles..."
 ./node_modules/.bin/webpack --config webpack.config.js > /dev/null
