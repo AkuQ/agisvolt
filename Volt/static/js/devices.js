@@ -251,12 +251,12 @@ class Devices extends React.Component {
                 </ComposableMap>
             </div>
             <div style={{flexGrow: 1, display: 'flex', flexDirection: 'column'}}>
-                <div style={{height: '50%'}}>
+                <div style={{flexGrow: 1}}>
                     <ul style={{listStyle: "none", columnCount: 4, columnFill: 'auto', overflowX: 'auto', height: '100%', margin: 0, padding: 10}}>
                         {this.state.markers.map((m, i) => m.renderAsListItem(i))}
                     </ul>
                 </div>
-                <div style={{flexGrow: 1, borderRadius: 10, backgroundColor: '#ECEFF1', height: '50%', margin: '10px 15px 0 15px'}}>
+                <div style={{flexGrow: 1, borderRadius: 10, backgroundColor: '#ECEFF1', margin: '10px 15px 0 15px'}}>
                     <div style={{padding: '5px'}}>
 
                     </div>
