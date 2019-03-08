@@ -49,5 +49,5 @@ export function logout() {
 }
 
 export function fetchDevices() {
-    return callAPI('GET', '/devices',{}, false).then( res => res.json());
+    return callAPI('GET', '/devices/',{}, false).then( res => res.json());
 }
