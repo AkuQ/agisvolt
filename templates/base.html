@@ -7,12 +7,14 @@
  <head>
  <meta charset="UTF-8">
  <title>{% block title %}{% endblock %}</title>
- <link rel="stylesheet" type="text/css" href="{% static 'animation.css' %}{% debug_decache %}">
+ <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}{% debug_decache %}">
  </head>
  <body>
     <script>const django = JSON.parse("{% context_json %}")</script>
     <div id="nav"></div>
-    {% render_bundle 'nav' %}
-    {% block content %}{% endblock %}
+    <div id="content">
+        {% render_bundle 'nav' %}
+        {% block content %}{% endblock %}
+    </div>
  </body>
 </html>
