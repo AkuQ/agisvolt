@@ -14,8 +14,8 @@ import {fetchDevices} from "./api_handler";
 
 const wrapperStyles = {
     width: "38%",
-    // maxWidth: 980,
     margin: "0 auto",
+    padding: 0,
     border: "1px solid black",
     float: "left",
 };
@@ -216,45 +216,54 @@ class Devices extends React.Component {
     }
 
     render() {
-        return <div style={{display: "flex"}}  onClick={ev => this.setState({selected: []}, )} >
+        return (
+        <div style={{display: "flex", height:'100%'}} onClick={ev => this.setState({selected: []}, )}>
             <div style={wrapperStyles} onWheel={ev => this.zoom(ev)} >
-            <ComposableMap
-                ref={this.map}
-                projectionConfig={{ scale: 3500 }} //todo: set better projection
-                width={this.state.size[0]} height={this.state.size[1]}
-                style={{width: "100%", height: "auto"}}>
-                <ZoomableGroup
-                    center={this.state.center}
-                    zoom={this.state.zoom}
-                    // disablePanning={true}
-                    onClick={ev => this.move(ev)}
-                    onMoveStart={() => this.can_zoom=false}
-                    onMoveEnd={ev => {
-                        this.positionMarkers(this.state.zoom, ev);
-                        this.setState({center: ev}, () => this.can_zoom=true)}
-                    }
-                >
-                <Geographies geography="/static/world.json">
-                    {(geographies, projection) =>
-                        geographies.map((geography, i) =>
-                            countries.indexOf(geography.id) !== -1 && (
-                            <Geography key={i} geography={geography} projection={projection} style={this.geo_style}/>
+                <ComposableMap
+                    ref={this.map}
+                    projectionConfig={{ scale: 3500 }} //todo: set better projection
+                    width={this.state.size[0]} height={this.state.size[1]}
+                    style={{width: "100%", height: "100%"}}>
+                    <ZoomableGroup
+                        center={this.state.center}
+                        zoom={this.state.zoom}
+                        // disablePanning={true}
+                        onClick={ev => this.move(ev)}
+                        onMoveStart={() => this.can_zoom=false}
+                        onMoveEnd={ev => {
+                            this.positionMarkers(this.state.zoom, ev);
+                            this.setState({center: ev}, () => this.can_zoom=true)}
+                        }
+                    >
+                    <Geographies geography="/static/world.json">
+                        {(geographies, projection) =>
+                            geographies.map((geography, i) =>
+                                countries.indexOf(geography.id) !== -1 && (
+                                <Geography key={i} geography={geography} projection={projection} style={this.geo_style}/>
+                            )
                         )
-                    )
-                }
-                </Geographies>
-                <Markers>
-                    {this.state.markers.map((m, i) => m.renderAsMapItem(i))}
-                </Markers>
-              </ZoomableGroup>
-            </ComposableMap>
+                    }
+                    </Geographies>
+                    <Markers>
+                        {this.state.markers.map((m, i) => m.renderAsMapItem(i))}
+                    </Markers>
+                  </ZoomableGroup>
+                </ComposableMap>
             </div>
-            <div style={{flexGrow: 1,}} >
-                <ul style={{listStyle: "none", padding: 0,}}>
-                    {this.state.markers.map((m, i) => m.renderAsListItem(i))}
-                </ul>
+            <div style={{flexGrow: 1, display: 'flex', flexDirection: 'column'}}>
+                <div style={{height: '50%'}}>
+                    <ul style={{listStyle: "none", columnCount: 4, columnFill: 'auto', overflowX: 'auto', height: '100%', margin: 0, padding: 10}}>
+                        {this.state.markers.map((m, i) => m.renderAsListItem(i))}
+                    </ul>
+                </div>
+                <div style={{flexGrow: 1, borderRadius: 10, backgroundColor: '#ECEFF1', height: '50%', margin: '10px 15px 0 15px'}}>
+                    <div style={{padding: '5px'}}>
+
+                    </div>
+                </div>
             </div>
-        </div>;
+        </div>
+        );
     }
 }
 
