@@ -19,10 +19,12 @@ from django.views.decorators.csrf import csrf_exempt
 
 from Volt.routes.views import Views
 from Volt.routes.api import API
+from Volt.routes.web import WebAPI
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path(r'^api/(?P<path>[\w/]*)/$', csrf_exempt(API)),
+    re_path(r'^web/(?P<path>[\w/]*)/$', csrf_exempt(WebAPI)),
     re_path(r'^(?P<path>[\w/]*)/?$', Views),
 ]

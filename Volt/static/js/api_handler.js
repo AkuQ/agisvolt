@@ -10,6 +10,7 @@ import {parametrizeURL} from './utils';
  */
 function callAPI(method, route, data={}, redirect=true) {
     method = method.toUpperCase();
+    route = '/web' + route;
 
     let conf = {
         method: method,
@@ -48,5 +49,5 @@ export function logout() {
 }
 
 export function fetchDevices() {
-    return callAPI('GET', '/api/devices',{}, false).then( res => res.json());
+    return callAPI('GET', '/devices',{}, false).then( res => res.json());
 }
