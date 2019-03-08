@@ -1,5 +1,3 @@
-import {logout} from "./api_handler";
-
 const React = require('react');
 const ReactDOM = require('react-dom');
 
