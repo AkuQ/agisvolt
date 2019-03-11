@@ -1,14 +1,41 @@
-
+from threading import Thread
 from time import sleep, time
+from tkinter import Tk
 
 from .agisvolt import APIHandler
 from .gpio import Voltmeter
+from .view import View
+from . import scripts
+
+status = ('blue', 'Starting...')
+battery = 0.0
+
+
+def set_status(color, message):
+    global status
+    status = (color, message)
+    return True
+
+
+def run_view():
+    scripts.disable_screensaver()
+    tk = Tk()
+    tk.geometry("%dx%d+0+0" % (tk.winfo_screenwidth(),tk.winfo_screenheight()))
+    tk.wm_attributes("-fullscreen", True)
+    View(tk, callbacks={
+        'status': lambda: status,
+        'battery': lambda: battery,
+    })
+
+
+Thread(target=run_view).start()
 
 
 api = APIHandler('http://agis.innocode.fi')
 while not api.register():
-    print('Warning: Could not register device')
+    set_status('orange', 'Authentication error')
     sleep(5)
+set_status('green', 'OK')
 
 voltmeter = Voltmeter()
 voltmeter.open()
@@ -31,22 +58,25 @@ try:
             else:
                 percent = conversion / (2 ** 15)
                 result = percent * voltage
-                print("%s mV" % (str(result) if not overflow else "OVERFLOW"))
+                # print("%s mV" % (str(result) if not overflow else "OVERFLOW"))
                 data = result
                 done = True
 
         now = int(time())
         if now > last_timestamp:
+            battery = data / 12000
             api.append_measurement(now, data / 1000.0, 'Voltage')
             ii = 0
-            api.send_measurements(lambda err: err and print("Warning: API call failed."))
+            api.send_measurements(
+                lambda err: err and set_status('orange', 'Connection error') or set_status('green', 'OK')
+            )
             last_timestamp = now
         sleep(.1)
 except KeyboardInterrupt:
     pass
 
 api.append_measurement(last_timestamp + 1, None, 'Voltage')
-api.send_measurements(lambda err: err and print("Warning: API call failed."))
+api.send_measurements(lambda err: set_status('orange', 'Connection error'))
 
 voltmeter.close()
 
