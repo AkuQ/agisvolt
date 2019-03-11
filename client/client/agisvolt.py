@@ -90,8 +90,7 @@ class APIHandler:
         """
         Send measurement samples to server asynchronously.
 
-        :param callback: Callback function for handling potential errors, in normal operation recieves None or HTTPError
-            as first parameter.
+        :param callback: Callback function for handling potential errors, recieves None or HTTPError as first parameter.
         """
         def send():
             nonlocal self, callback
@@ -100,9 +99,8 @@ class APIHandler:
                     res, err = self._api_call('POST', '/api/measurements/', {
                         'measurements': list(self._measurements.values())
                     })
-                    if err:
-                        callback(err)
-                    else:
+                    callback(err)
+                    if not err:
                         self._measurements.clear()
         Thread(target=send).start()
 
