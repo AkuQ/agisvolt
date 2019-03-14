@@ -221,7 +221,7 @@ class Devices extends React.Component {
             <div style={wrapperStyles} onWheel={ev => this.zoom(ev)} >
                 <ComposableMap
                     ref={this.map}
-                    projectionConfig={{ scale: 3500 }} //todo: set better projection
+                    projectionConfig={{ scale: this.state.scale }} //todo: set better projection
                     width={this.state.size[0]} height={this.state.size[1]}
                     style={{width: "100%", height: "100%"}}>
                     <ZoomableGroup
