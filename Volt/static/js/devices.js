@@ -148,7 +148,8 @@ class Devices extends React.Component {
             .then(result => result.devices.map(d => {
                 d.coordinates = [d.lon, d.lat];
                 let m = d.avg_measurements.Voltage || null;
-                d.state = m === null && "#888"
+                d.state =
+                     m === null && "#888"
                     || m < 11.5 && "#F00"
                     || m < 11.9 && "#F80"
                     || m < 15.0 && "#0A0"
