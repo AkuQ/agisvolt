@@ -8,6 +8,7 @@
  <meta charset="UTF-8">
  <title>{% block title %}{% endblock %}</title>
  <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}{% debug_decache %}">
+    {% block header %}{% endblock %}
  </head>
  <body>
     <script>const django = JSON.parse("{% context_json %}")</script>
