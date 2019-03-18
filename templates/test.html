@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load render_bundle from webpack_loader %}
+{% load customtags %}
+{% load static %}
+
+{% block title %} Test {% endblock title %}
+{% block header %}
+    <link rel="stylesheet" href="{% static 'css/leaflet.css' %}{% debug_decache %}" />
+{% endblock %}
+{% block content %}
+    <div id="react"></div>
+    {% render_bundle 'test' %}
+{% endblock content %}

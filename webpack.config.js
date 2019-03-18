@@ -10,6 +10,7 @@ module.exports = {
       login: './Volt/static/js/login',
       nav: './Volt/static/js/nav',
       devices: './Volt/static/js/devices',
+      test: './Volt/static/js/test',
   },
 
   output: {

@@ -19,6 +19,10 @@ class Views(metaclass=RouteMeta):
         return render(request, 'demo.html')
 
     @staticmethod
+    def test(request: Request):
+        return render(request, 'test.html')
+
+    @staticmethod
     def devices(request: Request):
         return render(request, 'devices.html')
 
