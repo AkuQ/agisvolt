@@ -9,8 +9,7 @@ import {
   Marker,
 } from "react-simple-maps"
 
-import {fetchDevices} from "./api_handler";
-
+import * as API from "./api_handler";
 
 const wrapperStyles = {
     width: "38%",
@@ -144,7 +143,7 @@ class Devices extends React.Component {
     }
 
     fetchDevices() {
-        fetchDevices()
+        API.fetchDevices()
             .then(result => result.devices.map(d => {
                 d.coordinates = [d.lon, d.lat];
                 let m = d.avg_measurements.Voltage || null;
@@ -270,124 +269,5 @@ class Devices extends React.Component {
 
 
 
-// // drop-in replacement for Snap.load, with caching
-// const cache = {};
-// export function load(path, callback) {
-//   if (cache[path]) {
-//     callback(Snap(cache[path].node.cloneNode(true)))
-//   } else {
-//     Snap.load(path, (img) => {
-//       cache[path] = Snap(img.node.cloneNode(true));
-//       callback(img);
-//     })
-//   }
-// }
-
-// class MarkerSVG extends React.Component {
-//     constructor(props){
-//         super(props);
-//         const circle =`
-//         M 50,1
-//         C 50,1   1,1   1,50
-//         C 1,50  1,99  50,99
-//         C 50,99 99,99 99,50
-//         C 99,50  99,1  50,1`;
-//         const diamond =`
-//         M 50,1
-//         C 50,1  50,1   1,50
-//         C 1,50  1,50  50,99
-//         C 50,99 50,99 99,50
-//         C 99,50 99,50 50,1`;
-//         const thinstar4 =`
-//         M 50,1
-//         C 50,1  50,50  1,50
-//         C 1,50  50,50 50,99
-//         C 50,99 50,50 99,50
-//         C 99,50 50,50 50,1`;
-//         const heart =`
-//         M 50,50
-//         C 50,50 25,0  1,50
-//         C 1,50  50,99 50,99
-//         C 50,99 99,50 99,50
-//         C 99,50 75,0  50,50`;
-//
-//         this.state = {
-//             values: [thinstar4, circle],
-//             hover: false,
-//         };
-//
-//         const reverseAnim = () => {
-//             let anim = this.animations.hover.current;
-//             let start_time;
-//             try  { start_time  = anim.getStartTime() } catch (e) { start_time = -10 }
-//             let restart_offset = (anim.getCurrentTime() - start_time) - 5;
-//             restart_offset > 0 && (restart_offset = 0);
-//             restart_offset < -5 && (restart_offset = -5);
-//
-//             console.log(anim.getCurrentTime(), start_time);
-//             // console.log(restart_offset);
-//
-//
-//             anim.endElementAt(restart_offset);
-//             // anim.beginElementAt(restart_offset);
-//             return restart_offset
-//         };
-//
-//         this.on = {
-//             onMouseOver: () => {
-//                 let offset = reverseAnim();
-//                 this.setState({values: [circle, thinstar4]},
-//                     () => this.animations.hover.current.beginElementAt(offset));
-//             },
-//             onMouseOut: () => {
-//                 let offset = reverseAnim();
-//                 this.setState({ values: [thinstar4, circle]},
-//                     () => this.animations.hover.current.beginElementAt(offset));
-//             },
-//         };
-//
-//         this.animations = {
-//             hover: React.createRef(),
-//         }
-//     }
-//
-//
-//     render() {
-// const circle =`
-// M 50,1
-// C 50,1   1,1   1,50
-// C 1,50  1,99  50,99
-// C 50,99 99,99 99,50
-// C 99,50  99,1  50,1`;
-//         const anim1 = <animate
-//             ref={this.animations.hover}
-//             attributeName="d"
-//             values={this.state.values.join(';')}
-//             keyTimes= "0; 1;"
-//             calcMode="linear"
-//             dur="5s"
-//             fill="freeze"
-//             begin="indefinite"
-//         />;
-//
-//         return (
-//             <svg className='marker' width={333} height={200} viewBox="0 0 100 100">
-//                 <path fill="red" d={circle}>
-//                     {anim1}
-//                 </path>
-//                 <rect fill="transparent" width="100" height="100" x="0" y="0" {...this.on}/>
-//             </svg>
-//         );
-//     }
-//
-//     componentDidMount() {
-//         // this.animations.hover.current.beginElement();
-//     }
-// }
-// // M 50,1 A 50,50 0 0 0 1,50 A 50,50 0 0 0 50,99 A 50,50 0 0 0 99,50 A 50,50 0 0 0 50,1
-//
-//
-//
 let target;
-// // (target = document.getElementById('test')) && ReactDOM.render(<MarkerSVG/> , target);
 (target = document.getElementById('devices')) && ReactDOM.render(<Devices/> , target);
